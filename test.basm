@@ -1,0 +1,41 @@
+segment .meta
+version 1
+name #1
+
+; Indexing is in order of definitions, starting at 1 to leave implicit null constant at 0.
+segment .constpool
+string "Test"
+string "Object"
+string "x"
+string "y"
+string "add"
+string "addImpl"
+module_info #1
+function_info #7, #6
+class_info #7, #2
+field_info #9, #3
+field_info #9, #4
+
+segment .class
+name #2 ; string
+superclass #0 ; class_info or null
+field int, #3 ; type, string
+field int, #4 ; type, string
+method #5, #8 ; name, function_info (implementation)
+
+; You'd do `segment .class` again to define another class
+
+segment .function
+name #7 ; string
+flags 0x0000 ; regular ole function
+registers 3
+parameters 1
+code
+{
+    getfield r1, r0, #10 ; dst, obj, field_info
+    getfield r2, r0, #11 ; dst, obj, field_info
+    add r1, r1, r2 ; dst, lhs, rhs
+    return r1 ; value
+}
+
+; You'd do `segment .function` again to define another function
