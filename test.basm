@@ -1,4 +1,4 @@
-segment .meta
+segment .module
 version 1
 name #1
 
@@ -31,11 +31,10 @@ flags 0x0000 ; regular ole function
 registers 3
 parameters 1
 code
-{
     getfield r1, r0, #10 ; dst, obj, field_info
     getfield r2, r0, #11 ; dst, obj, field_info
     add r1, r1, r2 ; dst, lhs, rhs
     return r1 ; value
-}
+endcode
 
 ; You'd do `segment .function` again to define another function
