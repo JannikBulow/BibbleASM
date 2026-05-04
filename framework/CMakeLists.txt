@@ -9,10 +9,21 @@ FetchContent_Declare(BibbleBytecode
 )
 FetchContent_MakeAvailable(BibbleBytecode)
 
+FetchContent_Declare(BibbleOpcodes
+    GIT_REPOSITORY https://github.com/JannikBulow/BibbleOpcodes
+    GIT_TAG master
+)
+FetchContent_MakeAvailable(BibbleOpcodes)
+
 set(SOURCES
+    src/instruction/operand/immediate.cpp
 )
 
 set(HEADERS
+    include/BibbleASM/instruction/instruction.h
+    include/BibbleASM/instruction/operand.h
+
+    include/BibbleASM/opcodes.h
 )
 
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
@@ -41,3 +52,6 @@ target_include_directories(BibbleASM-framework-static PUBLIC
 
 target_compile_features(BibbleASM-framework-shared PUBLIC cxx_std_20)
 target_compile_features(BibbleASM-framework-static PUBLIC cxx_std_20)
+
+target_link_libraries(BibbleASM-framework-shared BibbleBytecode-shared BibbleOpcodes)
+target_link_libraries(BibbleASM-framework-static BibbleBytecode-static BibbleOpcodes)
