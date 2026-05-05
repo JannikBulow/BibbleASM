@@ -16,14 +16,27 @@ FetchContent_Declare(BibbleOpcodes
 FetchContent_MakeAvailable(BibbleOpcodes)
 
 set(SOURCES
-    src/instruction/operand/immediate.cpp
+    src/codegen/builder/class_builder.cpp
+    src/codegen/builder/const_pool_builder.cpp
+    src/codegen/builder/function_builder.cpp
+    src/codegen/builder/module_builder.cpp
+
+    src/codegen/assembler.cpp
+
+    src/instruction/instruction.cpp
 )
 
 set(HEADERS
+    include/BibbleASM/codegen/builder/class_builder.h
+    include/BibbleASM/codegen/builder/const_pool_builder.h
+    include/BibbleASM/codegen/builder/function_builder.h
+    include/BibbleASM/codegen/builder/module_builder.h
+
+    include/BibbleASM/codegen/opcodes.h
+
     include/BibbleASM/instruction/instruction.h
     include/BibbleASM/instruction/operand.h
-
-    include/BibbleASM/opcodes.h
+    include/BibbleASM/codegen/assembler.h
 )
 
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})

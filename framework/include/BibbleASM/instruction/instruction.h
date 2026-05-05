@@ -3,19 +3,23 @@
 #ifndef BIBBLEASM_INSTRUCTION_INSTRUCTION_H
 #define BIBBLEASM_INSTRUCTION_INSTRUCTION_H 1
 
+#include "BibbleASM/codegen/opcodes.h"
+
 #include "BibbleASM/instruction/operand.h"
 
-#include "BibbleASM/opcodes.h"
+#include "BibbleASM/api.h"
 
 #include <ostream>
 #include <vector>
 
 namespace bibbleasm {
-    class Instruction {
+    class BIBBLEASM_EXPORT Instruction {
     public:
         explicit Instruction(Opcode opcode, std::vector<Operand> operands = {});
 
         Opcode getOpcode() const { return mOpcode; }
+
+        size_t getOperandCount() const { return mOperands.size(); }
 
         const std::vector<Operand>& operands() const { return mOperands; }
         std::vector<Operand>& operands() { return mOperands; }
