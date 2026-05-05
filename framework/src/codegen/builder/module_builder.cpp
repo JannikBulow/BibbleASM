@@ -70,7 +70,7 @@ namespace bibbleasm {
             }
 
             module.mFunctionBytecodes.push_back(std::move(bytecode));
-            const std::vector<uint8_t> storedBytecode = module.mFunctionBytecodes.back();
+            const std::vector<uint8_t>& storedBytecode = module.mFunctionBytecodes.back();
 
             bibblebytecode::Function fn{};
             fn.name = builder->getName();
