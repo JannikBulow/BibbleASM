@@ -2,7 +2,7 @@
 
 #include "BibbleASM/codegen/builder/module_builder.h"
 
-#include "BibbleASM/instruction/builder_funcs.h"
+#include "BibbleASM/instruction/builder.h"
 
 #include <BibbleBytecode/buffer.h>
 #include <BibbleBytecode/writer.h>
@@ -20,10 +20,10 @@ int main() {
     moduleBuilder.setName(moduleName);
 
     bibbleasm::FunctionBuilder& mainFunc = moduleBuilder.addFunction(mainFunctionName, 0, 1, 0);
-    bibbleasm::Assembler& as = mainFunc.assembler();
+    bibbleasm::InstructionBuilder instructionBuilder(mainFunc.assembler());
 
-    as.emit(bibbleasm::build::load_imm(0, 69));
-    as.emit(bibbleasm::build::return_(0));
+    instructionBuilder.load_imm(0, 67);
+    instructionBuilder.return_(0);
 
     bibbleasm::Module module = moduleBuilder.build();
     const bibblebytecode::Module& mod = module.module();
