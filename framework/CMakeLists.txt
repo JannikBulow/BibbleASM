@@ -32,11 +32,13 @@ set(HEADERS
     include/BibbleASM/codegen/builder/function_builder.h
     include/BibbleASM/codegen/builder/module_builder.h
 
+    include/BibbleASM/codegen/assembler.h
     include/BibbleASM/codegen/opcodes.h
 
+    include/BibbleASM/instruction/builder.h
+    include/BibbleASM/instruction/builder_funcs.h
     include/BibbleASM/instruction/instruction.h
     include/BibbleASM/instruction/operand.h
-    include/BibbleASM/codegen/assembler.h
 )
 
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})

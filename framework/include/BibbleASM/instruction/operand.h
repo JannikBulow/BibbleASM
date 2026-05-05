@@ -22,7 +22,7 @@ namespace bibbleasm {
     struct Register {
         uint16_t index;
 
-        explicit constexpr Register(uint16_t index) : index(index) {}
+        constexpr Register(uint16_t index) : index(index) {}
         bool operator==(const Register&) const = default;
     };
 
@@ -30,57 +30,40 @@ namespace bibbleasm {
         OperandSize size;
         int64_t value;
 
-        explicit constexpr Immediate(int64_t value) : value(value) {}
+        constexpr Immediate(int64_t value) : size(OperandSize::Unknown), value(value) {}
+        constexpr Immediate(OperandSize size, int64_t value) : size(size), value(value) {}
         bool operator==(const Immediate&) const = default;
     };
 
     struct ConstPoolIndex {
         uint16_t index;
 
-        explicit constexpr ConstPoolIndex(uint16_t index) : index(index) {}
+        constexpr ConstPoolIndex(uint16_t index) : index(index) {}
         bool operator==(const ConstPoolIndex&) const = default;
     };
 
     struct Label {
         std::string name;
 
-        explicit Label(std::string name) : name(std::move(name)) {}
+        Label(std::string name) : name(std::move(name)) {}
         bool operator==(const Label&) const = default;
     };
 
     struct BranchOffset {
         int64_t offset;
 
-        explicit constexpr BranchOffset(int64_t offset) : offset(offset) {}
+        constexpr BranchOffset(int64_t offset) : offset(offset) {}
         bool operator==(const BranchOffset&) const = default;
     };
 
-    using OperandVariant = std::variant<
+    using Operand = std::variant<
         Register,
         Immediate,
         ConstPoolIndex,
         Label,
         BranchOffset
     >;
-
-    struct Operand {
-        OperandVariant variant;
-
-        std::optional<uint16_t> asRegister() const {
-            if (const auto* r = std::get_if<Register>(&variant)) return r->index;
-            return std::nullopt;
-        }
-
-        std::optional<int64_t> asImmediate() const {
-            if (const auto* r = std::get_if<Immediate>(&variant)) return r->value;
-            return std::nullopt;
-        }
-
-        std::optional<uint16_t> asConstPoolIndex() const {
-            if (const auto* r = std::get_if<ConstPoolIndex>(&variant)) return r->index;
-            return std::nullopt;
-        }
-    };
 }
+
 
 #endif // BIBBLEASM_INSTRUCTION_OPERAND_H

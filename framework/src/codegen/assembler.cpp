@@ -89,7 +89,7 @@ namespace bibbleasm {
             int64_t resolved = 0;
             bool found = false;
             for (const auto& op : insn.operands()) {
-                if (const auto* label = std::get_if<Label>(&op.variant)) {
+                if (const auto* label = std::get_if<Label>(&op)) {
                     auto it = mLabels.find(label->name);
                     if (it == mLabels.end()) {
                         std::exit(67);
@@ -104,7 +104,7 @@ namespace bibbleasm {
                     break;
                 }
 
-                if (const auto* branchOffset = std::get_if<BranchOffset>(&op.variant)) {
+                if (const auto* branchOffset = std::get_if<BranchOffset>(&op)) {
                     resolved = branchOffset->offset;
                     found = true;
                     break;
@@ -194,8 +194,8 @@ namespace bibbleasm {
             case RESOLVE:
             case CANCEL:
             case AWAIT:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
             // ---- Three regs ----
@@ -226,45 +226,45 @@ namespace bibbleasm {
             case ARRAYGET:
             case STRGET:
             case POLL:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             // ---- SETFIELD: reg(OBJ), const(FIELD), reg(VALUE) ----
             case SETFIELD:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             // ---- ARRAYSET / RESOLVE (same shape, all three regs) ----
             case ARRAYSET:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             // ---- LOAD_CONST: reg(DST), const(IDX) ----
             case LOAD_CONST:
             case NEWINSTANCE:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
                 break;
 
             // ---- LOAD_IMM: reg(DST), imm ----
             case LOAD_IMM: {
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                const auto& imm = std::get<Immediate>(ops[1].variant);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                const auto& imm = std::get<Immediate>(ops[1]);
                 addImmediate(imm.size, imm.value, 0xF1);
                 break;
             }
 
             // ---- MOV_RANGE: reg(DST), reg(SRC), imm(COUNT) ----
             case MOV_RANGE: {
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                const auto& imm = std::get<Immediate>(ops[2].variant);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                const auto& imm = std::get<Immediate>(ops[2]);
                 addImmediate(imm.size, imm.value, 0xF2);
                 break;
             }
@@ -272,8 +272,8 @@ namespace bibbleasm {
             // ---- INC / DEC: reg(VALUE), imm ----
             case INC:
             case DEC: {
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                const auto& imm = std::get<Immediate>(ops[1].variant);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                const auto& imm = std::get<Immediate>(ops[1]);
                 addImmediate(imm.size, imm.value, 0xF1);
                 break;
             }
@@ -290,80 +290,80 @@ namespace bibbleasm {
             case JLE:
             case JGT:
             case JGE:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
                 addBranch(resolvedBranch, 0xF1);
                 break;
 
             // ---- NEWFUTURE / RETURN: one reg ----
             case NEWFUTURE:
             case RETURN:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
                 break;
 
             // ---- NEWARRAY: reg(DST), reg(LEN), imm8(TYPEID) ----
             case NEWARRAY:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
                 addImm8Fixed();
                 break;
 
             // ---- ISKIND: reg(DST), reg(OBJ), imm8(KIND) ----
             case ISKIND:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
                 addImm8Fixed();
                 break;
 
             // ---- CALL: reg(DST), const(IDX), reg(ARGS) ----
             case CALL:
             case CALLA:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             // ---- TAIL_CALL: const(IDX), reg(ARGS) ----
             case TAIL_CALL:
-                addReg(std::get<ConstPoolIndex>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                addReg(std::get<ConstPoolIndex>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
             // ---- CALLAP: reg(DST), reg(PRIORITY), const(IDX), reg(ARGS) ----
             case CALLAP:
             case CALLAP_DYN:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
-                addReg(std::get<Register>(ops[3].variant).index, 0xF3);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
+                addReg(std::get<Register>(ops[3]).index, 0xF3);
                 break;
 
             // ---- CALLARP: reg(DST), imm8(PRIORITY), const(IDX), reg(ARGS) ----
             case CALLARP:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
                 addImm8Fixed(); // priority imm8
-                addReg(std::get<ConstPoolIndex>(ops[2].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[3].variant).index, 0xF2);
+                addReg(std::get<ConstPoolIndex>(ops[2]).index, 0xF1);
+                addReg(std::get<Register>(ops[3]).index, 0xF2);
                 break;
 
             // ---- CALL_DYN / CALLA_DYN / TAIL_CALL_DYN ----
             case CALL_DYN:
             case CALLA_DYN:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             case TAIL_CALL_DYN:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                addReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
             // ---- CALLARP_DYN: reg(DST), imm8(PRIORITY), reg(FN), reg(ARGS) ----
             case CALLARP_DYN:
-                addReg(std::get<Register>(ops[0].variant).index, 0xF0);
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
                 addImm8Fixed(); // priority imm8
-                addReg(std::get<Register>(ops[2].variant).index, 0xF1);
-                addReg(std::get<Register>(ops[3].variant).index, 0xF2);
+                addReg(std::get<Register>(ops[2]).index, 0xF1);
+                addReg(std::get<Register>(ops[3]).index, 0xF2);
                 break;
 
             default:
@@ -461,8 +461,8 @@ namespace bibbleasm {
             case RESOLVE:
             case CANCEL:
             case AWAIT:
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
             // Three regs
@@ -493,48 +493,48 @@ namespace bibbleasm {
             case ARRAYGET:
             case STRGET:
             case POLL:
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             case SETFIELD:
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             case ARRAYSET:
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
             case LOAD_CONST:
             case NEWINSTANCE:
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
                 break;
 
             case LOAD_IMM: {
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                const auto& imm = std::get<Immediate>(ops[1].variant);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                const auto& imm = std::get<Immediate>(ops[1]);
                 emitImmediate(imm.size, imm.value, 0xF1);
                 break;
             }
 
             case MOV_RANGE: {
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                const auto& imm = std::get<Immediate>(ops[2].variant);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                const auto& imm = std::get<Immediate>(ops[2]);
                 emitImmediate(imm.size, imm.value, 0xF2);
                 break;
             }
 
             case INC:
             case DEC: {
-                emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                const auto& imm = std::get<Immediate>(ops[1].variant);
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                const auto& imm = std::get<Immediate>(ops[1]);
                 emitImmediate(imm.size, imm.value, 0xF1);
                 break;
             }
@@ -547,66 +547,78 @@ namespace bibbleasm {
             case JLT:
             case JLE:
             case JGT:
-            case JGE: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
+            case JGE:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
                 emitBranch(resolvedBranch, 0xF1);
                 break;
 
             case NEWFUTURE:
-            case RETURN: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
+            case RETURN:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
                 break;
 
-            case NEWARRAY: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitImm8Fixed(std::get<Immediate>(ops[2].variant).value);
+            case NEWARRAY:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitImm8Fixed(std::get<Immediate>(ops[2]).value);
                 break;
 
-            case ISKIND: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitImm8Fixed(std::get<Immediate>(ops[2].variant).value);
+            case ISKIND:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitImm8Fixed(std::get<Immediate>(ops[2]).value);
                 break;
 
             case CALL:
-            case CALLA: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
+            case CALLA:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
-            case TAIL_CALL: emitConstPoolIndex(std::get<ConstPoolIndex>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
+            case TAIL_CALL:
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
-            case CALLAP: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[2].variant).index, 0xF2);
-                emitReg(std::get<Register>(ops[3].variant).index, 0xF3);
+            case CALLAP:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[2]).index, 0xF2);
+                emitReg(std::get<Register>(ops[3]).index, 0xF3);
                 break;
 
-            case CALLARP: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitImm8Fixed(std::get<Immediate>(ops[1].variant).value);
-                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[2].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[3].variant).index, 0xF2);
+            case CALLARP:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitImm8Fixed(std::get<Immediate>(ops[1]).value);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[2]).index, 0xF1);
+                emitReg(std::get<Register>(ops[3]).index, 0xF2);
                 break;
 
             case CALL_DYN:
-            case CALLA_DYN: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
+            case CALLA_DYN:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
                 break;
 
-            case TAIL_CALL_DYN: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
+            case TAIL_CALL_DYN:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
-            case CALLAP_DYN: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitReg(std::get<Register>(ops[1].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF2);
-                emitReg(std::get<Register>(ops[3].variant).index, 0xF3);
+            case CALLAP_DYN:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitReg(std::get<Register>(ops[2]).index, 0xF2);
+                emitReg(std::get<Register>(ops[3]).index, 0xF3);
                 break;
 
-            case CALLARP_DYN: emitReg(std::get<Register>(ops[0].variant).index, 0xF0);
-                emitImm8Fixed(std::get<Immediate>(ops[1].variant).value);
-                emitReg(std::get<Register>(ops[2].variant).index, 0xF1);
-                emitReg(std::get<Register>(ops[3].variant).index, 0xF2);
+            case CALLARP_DYN:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitImm8Fixed(std::get<Immediate>(ops[1]).value);
+                emitReg(std::get<Register>(ops[2]).index, 0xF1);
+                emitReg(std::get<Register>(ops[3]).index, 0xF2);
                 break;
 
             default:
