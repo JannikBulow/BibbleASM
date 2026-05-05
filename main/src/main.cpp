@@ -31,7 +31,8 @@ int main() {
         return 67;
     }
 
-    std::ofstream out("Test.bmod", std::ios::binary);
+    std::ofstream out("Main.bmod", std::ios::binary);
+    if (out.fail()) return 67;
     buf.emit(out);
 
     return 0;
