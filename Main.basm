@@ -4,7 +4,7 @@ name #1
 
 ; Indexing is in order of definitions, starting at 1 to leave implicit null constant at 0.
 segment .constpool
-string "Test"
+string "Main"
 string "Object"
 string "x"
 string "y"
