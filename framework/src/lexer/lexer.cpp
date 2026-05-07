@@ -242,7 +242,7 @@ namespace bibbleasm {
 
             for (std::string_view type : types) {
                 if (text == type) {
-
+                    return Token(TokenType::Type, start, std::move(text));
                 }
             }
 
