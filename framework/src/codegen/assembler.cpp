@@ -220,15 +220,21 @@ namespace bibbleasm {
             case UCMP:
             case FCMP:
             case STRCMP:
-            case INSTANCEOF:
-            case GETFIELD:
-            case DISPATCHMETHOD:
             case ARRAYGET:
             case STRGET:
             case POLL:
                 addReg(std::get<Register>(ops[0]).index, 0xF0);
                 addReg(std::get<Register>(ops[1]).index, 0xF1);
                 addReg(std::get<Register>(ops[2]).index, 0xF2);
+                break;
+
+            // ---- reg(DST), reg(OBJ), const-pool(FIELD/METHOD/CLASS) ----
+            case GETFIELD:
+            case DISPATCHMETHOD:
+            case INSTANCEOF:
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<ConstPoolIndex>(ops[2]).index, 0xF2);
                 break;
 
             // ---- SETFIELD: reg(OBJ), const(FIELD), reg(VALUE) ----
@@ -328,8 +334,15 @@ namespace bibbleasm {
                 addReg(std::get<Register>(ops[1]).index, 0xF1);
                 break;
 
-            // ---- CALLAP: reg(DST), reg(PRIORITY), const(IDX), reg(ARGS) ----
+            // ---- CALLAP: reg(DST), reg(PRIORITY), const-pool(IDX), reg(ARGS) ----
             case CALLAP:
+                addReg(std::get<Register>(ops[0]).index, 0xF0);
+                addReg(std::get<Register>(ops[1]).index, 0xF1);
+                addReg(std::get<ConstPoolIndex>(ops[2]).index, 0xF2);
+                addReg(std::get<Register>(ops[3]).index, 0xF3);
+                break;
+
+            // ---- CALLAP_DYN: reg(DST), reg(PRIORITY), reg(FN), reg(ARGS) ----
             case CALLAP_DYN:
                 addReg(std::get<Register>(ops[0]).index, 0xF0);
                 addReg(std::get<Register>(ops[1]).index, 0xF1);
@@ -487,15 +500,21 @@ namespace bibbleasm {
             case UCMP:
             case FCMP:
             case STRCMP:
-            case INSTANCEOF:
-            case GETFIELD:
-            case DISPATCHMETHOD:
             case ARRAYGET:
             case STRGET:
             case POLL:
                 emitReg(std::get<Register>(ops[0]).index, 0xF0);
                 emitReg(std::get<Register>(ops[1]).index, 0xF1);
                 emitReg(std::get<Register>(ops[2]).index, 0xF2);
+                break;
+
+            // ---- reg(DST), reg(OBJ), const-pool(FIELD/METHOD/CLASS) ----
+            case GETFIELD:
+            case DISPATCHMETHOD:
+            case INSTANCEOF:
+                emitReg(std::get<Register>(ops[0]).index, 0xF0);
+                emitReg(std::get<Register>(ops[1]).index, 0xF1);
+                emitConstPoolIndex(std::get<ConstPoolIndex>(ops[2]).index, 0xF2);
                 break;
 
             case SETFIELD:
@@ -631,7 +650,7 @@ namespace bibbleasm {
     }
 
     void Assembler::PushRegisterPrefix(std::vector<uint8_t>& out, uint8_t prefixByte, uint16_t index) {
-        if (index >= 0xFF) out.push_back(prefixByte);
+        if (index > 0xFF) out.push_back(prefixByte);
     }
 
     size_t Assembler::PushImmediatePrefix(std::vector<uint8_t>& out, uint8_t widePrefixByte, OperandSize size, int64_t value) {
