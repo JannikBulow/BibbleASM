@@ -36,9 +36,9 @@ namespace bibbleasm {
     };
 
     struct ConstPoolIndex {
-        uint16_t index;
+        ConstantIndex index;
 
-        constexpr ConstPoolIndex(uint16_t index) : index(index) {}
+        constexpr ConstPoolIndex(ConstantIndex index) : index(index) {}
         bool operator==(const ConstPoolIndex&) const = default;
     };
 
