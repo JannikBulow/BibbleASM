@@ -1,41 +1,33 @@
 // Copyright 2026 Jannik Laugmand Bülow
 
-#include "BibbleASM/codegen/builder/module_builder.h"
-
-#include "BibbleASM/instruction/builder.h"
-
-#include <BibbleBytecode/buffer.h>
-#include <BibbleBytecode/writer.h>
+#include "BibbleASM/lexer/lexer.h"
 
 #include <fstream>
+#include <iostream>
+#include <sstream>
 
-int main() {
-    bibbleasm::ModuleBuilder moduleBuilder;
-    auto& cp = moduleBuilder.constPool();
-
-    auto moduleName = cp.addString("Main");
-    auto mainFunctionName = cp.addString("main");
-
-    moduleBuilder.setVersion(1);
-    moduleBuilder.setName(moduleName);
-
-    bibbleasm::FunctionBuilder& mainFunc = moduleBuilder.addFunction(mainFunctionName, 0, 1, 0);
-    bibbleasm::InstructionBuilder instructionBuilder(mainFunc.assembler());
-
-    instructionBuilder.load_imm(0, 67);
-    instructionBuilder.return_(0);
-
-    bibbleasm::Module module = moduleBuilder.build();
-    const bibblebytecode::Module& mod = module.module();
-
-    bibblebytecode::WritableByteBuffer buf;
-    if (!bibblebytecode::writer::WriteModule(buf, mod)) {
-        return 67;
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        return 1;
     }
 
-    std::ofstream out("Main.bmod", std::ios::binary);
-    if (out.fail()) return 67;
-    buf.emit(out);
+    std::string inputFile = argv[1];
+
+    std::ifstream input(inputFile);
+    std::stringstream buffer;
+    buffer << input.rdbuf();
+
+    std::string text = buffer.str();
+
+    buffer.clear();
+    input.close();
+
+    bibbleasm::Lexer lexer(text);
+    std::vector<bibbleasm::Token> tokens = lexer.lex();
+
+    for (const auto& token : tokens) {
+        std::cout << token << std::endl;
+    }
 
     return 0;
 }

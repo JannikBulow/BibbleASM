@@ -24,6 +24,9 @@ set(SOURCES
     src/codegen/assembler.cpp
 
     src/instruction/instruction.cpp
+
+    src/lexer/lexer.cpp
+    src/lexer/token.cpp
 )
 
 set(HEADERS
@@ -39,6 +42,9 @@ set(HEADERS
     include/BibbleASM/instruction/builder_funcs.h
     include/BibbleASM/instruction/instruction.h
     include/BibbleASM/instruction/operand.h
+
+    include/BibbleASM/lexer/lexer.h
+    include/BibbleASM/lexer/token.h
 )
 
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
