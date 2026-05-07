@@ -3,8 +3,6 @@
 #ifndef BIBBLEASM_CODEGEN_BUILDER_CONST_POOL_BUILDER_H
 #define BIBBLEASM_CODEGEN_BUILDER_CONST_POOL_BUILDER_H 1
 
-#include "BibbleASM/codegen/opcodes.h"
-
 #include "BibbleASM/api.h"
 
 #include <BibbleBytecode/module/const_pool.h>
