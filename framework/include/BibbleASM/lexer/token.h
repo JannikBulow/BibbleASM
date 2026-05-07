@@ -40,7 +40,7 @@ namespace bibbleasm {
         MethodInfo,
         FunctionInfo,
 
-        // shared .class and .function keywords
+        // shared .module, .class and .function keywords
         Name,
 
         // .class keywords
