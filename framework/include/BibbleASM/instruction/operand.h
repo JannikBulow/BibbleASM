@@ -3,6 +3,8 @@
 #ifndef BIBBLEASM_INSTRUCTION_OPERAND_H
 #define BIBBLEASM_INSTRUCTION_OPERAND_H 1
 
+#include "BibbleASM/codegen/builder/const_pool_builder.h"
+
 #include "BibbleASM/api.h"
 
 #include <memory>
