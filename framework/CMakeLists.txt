@@ -27,6 +27,8 @@ set(SOURCES
 
     src/lexer/lexer.cpp
     src/lexer/token.cpp
+
+    src/parser/parser.cpp
 )
 
 set(HEADERS
@@ -45,6 +47,8 @@ set(HEADERS
 
     include/BibbleASM/lexer/lexer.h
     include/BibbleASM/lexer/token.h
+
+    include/BibbleASM/parser/parser.h
 )
 
 source_group(TREE ${PROJECT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
