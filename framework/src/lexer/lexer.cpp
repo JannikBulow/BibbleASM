@@ -217,13 +217,13 @@ namespace bibbleasm {
     }
 
     std::optional<Token> Lexer::nextToken() {
-        if (std::isspace(current())) return std::nullopt;
+        if (std::isspace(static_cast<unsigned char>(current()))) return std::nullopt;
 
         SourceLocation start(mLine, mColumn);
 
-        if (std::isalpha(current()) || current() == '_' || current() == '.') { // identifier
+        if (std::isalpha(static_cast<unsigned char>(current())) || current() == '_' || current() == '.') { // identifier
             std::string text(1, current());
-            while (std::isalnum(peek(1)) || peek(1) == '_' || peek(1) == '.') {
+            while (std::isalnum(static_cast<unsigned char>(peek(1))) || peek(1) == '_' || peek(1) == '.') {
                 consume();
                 text += current();
             }
@@ -250,7 +250,7 @@ namespace bibbleasm {
             if (text.size() >= 2 && text[0] == 'r') {
                 bool allDigits = true;
                 for (size_t i = 1; i < text.size(); ++i) {
-                    if (!std::isdigit(text[i])) {
+                    if (!std::isdigit(static_cast<unsigned char>(text[i]))) {
                         allDigits = false;
                         break;
                     }
@@ -267,7 +267,7 @@ namespace bibbleasm {
             return Token(TokenType::Identifier, start, std::move(text));
         }
 
-        if ((current() == '-' && std::isdigit(peek(1))) || std::isdigit(current())) {
+        if ((current() == '-' && std::isdigit(static_cast<unsigned char>(peek(1)))) || std::isdigit(static_cast<unsigned char>(current()))) {
             std::string text(1, current());
 
             if (current() == '-') {
@@ -280,7 +280,7 @@ namespace bibbleasm {
                     consume();
                     text += current();
 
-                    while (std::isxdigit(peek(1))) {
+                    while (std::isxdigit(static_cast<unsigned char>(peek(1)))) {
                         consume();
                         text += current();
                     }
@@ -299,7 +299,7 @@ namespace bibbleasm {
                     }
                 }
             } else {
-                while (std::isdigit(peek(1))) {
+                while (std::isdigit(static_cast<unsigned char>(peek(1)))) {
                     consume();
                     text += current();
                 }
