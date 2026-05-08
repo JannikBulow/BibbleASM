@@ -353,7 +353,7 @@ namespace bibbleasm {
                     }
                     consume();
                 }
-                return Token(TokenType::String, start, std::move(value));
+                return Token(TokenType::StringLiteral, start, std::move(value));
             }
 
             default:

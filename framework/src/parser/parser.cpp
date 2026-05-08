@@ -957,7 +957,7 @@ namespace bibbleasm {
     }
 
     std::string Parser::parseString() {
-        return expect(TokenType::String, "string literal").getText();
+        return expect(TokenType::StringLiteral, "string literal").getText();
     }
 
     Register Parser::parseRegister() {
