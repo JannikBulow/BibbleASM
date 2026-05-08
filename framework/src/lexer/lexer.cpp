@@ -342,7 +342,7 @@ namespace bibbleasm {
                                     value += '\0';
                                     break;
                                 default:
-                                    std::exit(68); // proper errors in 1 year
+                                    return Token(TokenType::Error, start, std::string(1, current()));
                             }
                             break;
                         }
