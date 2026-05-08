@@ -23,6 +23,7 @@ int main(int argc, char** argv) {
     buffer << input.rdbuf();
 
     std::string text = buffer.str();
+    text += '\n';
 
     buffer.clear();
     input.close();
