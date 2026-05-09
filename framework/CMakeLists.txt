@@ -23,6 +23,8 @@ set(SOURCES
 
     src/codegen/assembler.cpp
 
+    src/error/error_reporter.cpp
+
     src/instruction/instruction.cpp
 
     src/lexer/lexer.cpp
@@ -39,6 +41,8 @@ set(HEADERS
 
     include/BibbleASM/codegen/assembler.h
     include/BibbleASM/codegen/opcodes.h
+
+    include/BibbleASM/error/error_reporter.h
 
     include/BibbleASM/instruction/builder.h
     include/BibbleASM/instruction/builder_funcs.h

@@ -5,6 +5,8 @@
 
 #include "BibbleASM/codegen/builder/module_builder.h"
 
+#include "BibbleASM/error/error_reporter.h"
+
 #include "BibbleASM/instruction/builder.h"
 
 #include "BibbleASM/lexer/lexer.h"
@@ -15,21 +17,34 @@
 #include <unordered_map>
 #include <vector>
 
-
 namespace bibbleasm {
     class BIBBLEASM_EXPORT Parser {
     public:
-        Parser(std::string_view fileName, std::vector<Token>& tokens);
+        Parser(std::string_view fileName, std::vector<Token>& tokens, IErrorReporter& errorReporter);
 
         ModuleBuilder parse();
 
     private:
+        enum class SegmentKind {
+            None,
+            Module,
+            ConstPool,
+            Class,
+            Function,
+        };
+
+        struct Abort {};
+
         using InstructionParser = std::function<void(InstructionBuilder&)>;
 
         std::string_view mFileName;
         std::vector<Token>& mTokens;
+        IErrorReporter& mErrorReporter;
 
         size_t mPosition = 0;
+
+        SegmentKind mCurrentSegment = SegmentKind::None;
+        bool mInsideCode = false;
 
         ModuleBuilder* mOut = nullptr;
 
@@ -41,6 +56,9 @@ namespace bibbleasm {
         const Token& peek(int offset) const;
 
         const Token& expect(TokenType type, std::string_view context);
+
+        // sync to
+        void synchronize();
 
         // C++ primitive parsing
         ConstantIndex parseConstantIndex();
@@ -67,12 +85,21 @@ namespace bibbleasm {
 
         void parseInstruction(Assembler& as);
 
-        [[noreturn]] void error(const std::string& message) {
-            std::exit(69);
+        void warning(std::string message) {
+            warningAt(current(), std::move(message));
         }
 
-        [[noreturn]] void errorAt(const Token& token, const std::string& message) {
-            std::exit(69);
+        void warningAt(const Token& token, std::string message) {
+            mErrorReporter.warning({0, std::string(mFileName), std::move(message), token});
+        }
+
+        [[noreturn]] void error(std::string message) {
+            errorAt(current(), std::move(message));
+        }
+
+        [[noreturn]] void errorAt(const Token& token, std::string message) {
+            mErrorReporter.error({0, std::string(mFileName), std::move(message), token});
+            throw Abort();
         }
     };
 }

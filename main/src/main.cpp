@@ -32,7 +32,9 @@ int main(int argc, char** argv) {
     bibbleasm::Lexer lexer(text);
     std::vector<bibbleasm::Token> tokens = lexer.lex();
 
-    bibbleasm::Parser parser(argv[1], tokens);
+    bibbleasm::DefaultErrorReporter errorReporter;
+
+    bibbleasm::Parser parser(argv[1], tokens, errorReporter);
 
     bibbleasm::ModuleBuilder moduleBuilder = parser.parse();
     bibbleasm::Module module = moduleBuilder.build();

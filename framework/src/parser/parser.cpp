@@ -5,9 +5,10 @@
 #include <array>
 
 namespace bibbleasm {
-    Parser::Parser(std::string_view fileName, std::vector<Token>& tokens)
+    Parser::Parser(std::string_view fileName, std::vector<Token>& tokens, IErrorReporter& errorReporter)
         : mFileName(fileName)
-        , mTokens(tokens) {
+        , mTokens(tokens)
+        , mErrorReporter(errorReporter) {
         buildInstructionParsers();
     }
 
@@ -16,15 +17,23 @@ namespace bibbleasm {
         mOut = &moduleBuilder;
 
         while (current().getType() != TokenType::End) {
-            const Token& segment = expect(TokenType::Segment, "'segment'");
-            const Token& segmentName = expect(TokenType::Identifier, "segment name");
+            try {
+                mCurrentSegment = SegmentKind::None;
 
-            if (segmentName.getText() == ".module") parseModuleSegment();
-            else if (segmentName.getText() == ".constpool") parseConstPoolSegment();
-            else if (segmentName.getText() == ".class") parseClassSegment();
-            else if (segmentName.getText() == ".function") parseFunctionSegment();
-            else errorAt(segmentName, "unknown segment: '" + segmentName.getText() + "'");
+                const Token& segment = expect(TokenType::Segment, "'segment'");
+                const Token& segmentName = expect(TokenType::Identifier, "segment name");
+
+                if (segmentName.getText() == ".module") parseModuleSegment();
+                else if (segmentName.getText() == ".constpool") parseConstPoolSegment();
+                else if (segmentName.getText() == ".class") parseClassSegment();
+                else if (segmentName.getText() == ".function") parseFunctionSegment();
+                else errorAt(segmentName, "unknown segment: '" + segmentName.getText() + "'");
+            } catch (const Abort& a) {
+                synchronize();
+            }
         }
+
+        mErrorReporter.handleQueuedErrors();
 
         mOut = nullptr;
         return moduleBuilder;
@@ -908,6 +917,94 @@ namespace bibbleasm {
         return consume();
     }
 
+    void Parser::synchronize() {
+        consume(); // EAT the offender
+
+        while (current().getType() != TokenType::End) {
+            if (current().getType() == TokenType::Segment) {
+                mInsideCode = false;
+                return;
+            }
+
+            if (mInsideCode) {
+                switch (current().getType()) {
+                    case TokenType::Instruction:
+                    case TokenType::EndCode:
+                        return;
+                    default:
+                        consume();
+                        continue;
+                }
+            }
+
+            switch (mCurrentSegment) {
+                case SegmentKind::Module:
+                    switch (current().getType()) {
+                        case TokenType::Version:
+                        case TokenType::Name:
+                            return;
+                        default:
+                            break;
+                    }
+                    break;
+
+                case SegmentKind::ConstPool:
+                    switch (current().getType()) {
+                        case TokenType::Byte:
+                        case TokenType::Short:
+                        case TokenType::Int:
+                        case TokenType::Long:
+                        case TokenType::Float:
+                        case TokenType::Double:
+                        case TokenType::String:
+                        case TokenType::ModuleInfo:
+                        case TokenType::ClassInfo:
+                        case TokenType::FieldInfo:
+                        case TokenType::MethodInfo:
+                        case TokenType::FunctionInfo:
+                            return;
+
+                        default:
+                            break;
+                    }
+                    break;
+
+                case SegmentKind::Class:
+                    switch (current().getType()) {
+                        case TokenType::Name:
+                        case TokenType::SuperClass:
+                        case TokenType::Field:
+                        case TokenType::Method:
+                            return;
+
+                        default:
+                            break;
+                    }
+                    break;
+
+                case SegmentKind::Function:
+                    switch (current().getType()) {
+                        case TokenType::Name:
+                        case TokenType::Flags:
+                        case TokenType::Registers:
+                        case TokenType::Parameters:
+                        case TokenType::Code:
+                        case TokenType::EndCode:
+                            return;
+
+                        default:
+                            break;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
+            consume();
+        }
+    }
+
     ConstantIndex Parser::parseConstantIndex() {
         expect(TokenType::Hash, "'#'");
         uint16_t value = parseUInt16();
@@ -932,7 +1029,7 @@ namespace bibbleasm {
             base = 16;
             text.remove_prefix(2);
         } else if (text.starts_with("0b") || text.starts_with("0B")) {
-            base = 16;
+            base = 2;
             text.remove_prefix(2);
         } else if (text.front() == '0' && text.size() > 1) {
             base = 8;
@@ -1020,6 +1117,8 @@ namespace bibbleasm {
             TokenType::Version,
         };
 
+        mCurrentSegment = SegmentKind::Module;
+
         while (std::ranges::find(keywords, current().getType()) != keywords.end()
             && current().getType() != TokenType::Segment) {
 
@@ -1054,83 +1153,89 @@ namespace bibbleasm {
             TokenType::FunctionInfo,
         };
 
+        mCurrentSegment = SegmentKind::ConstPool;
+
         auto& cp = mOut->constPool();
 
         while (std::ranges::find(keywords, current().getType()) != keywords.end()
             && current().getType() != TokenType::Segment) {
 
-            const Token& token = consume();
+            try {
+                const Token& token = consume();
 
-            switch (token.getType()) {
-                case TokenType::Byte: {
-                    intmax_t value = parseInt();
-                    if (value < INT8_MIN || value > INT8_MAX) errorAt(token, "byte constant out of range");
-                    cp.addByte(static_cast<int8_t>(value));
-                    break;
+                switch (token.getType()) {
+                    case TokenType::Byte: {
+                        intmax_t value = parseInt();
+                        if (value < INT8_MIN || value > INT8_MAX) errorAt(token, "byte constant out of range");
+                        cp.addByte(static_cast<int8_t>(value));
+                        break;
+                    }
+                    case TokenType::Short: {
+                        intmax_t value = parseInt();
+                        if (value < INT16_MIN || value > INT16_MAX) errorAt(token, "short constant out of range");
+                        cp.addShort(static_cast<int16_t>(value));
+                        break;
+                    }
+                    case TokenType::Int: {
+                        intmax_t value = parseInt();
+                        if (value < INT32_MIN || value > INT32_MAX) errorAt(token, "int constant out of range");
+                        cp.addInt(static_cast<int32_t>(value));
+                        break;
+                    }
+                    case TokenType::Long: {
+                        intmax_t value = parseInt();
+                        if (value < INT64_MIN || value > INT64_MAX) errorAt(token, "long constant out of range");
+                        cp.addLong(static_cast<int64_t>(value));
+                        break;
+                    }
+                    case TokenType::Float: {
+                        errorAt(token, "float constant not implemented");
+                    }
+                    case TokenType::Double: {
+                        errorAt(token, "double constant not implemented");
+                    }
+                    case TokenType::String: {
+                        cp.addString(parseString());
+                        break;
+                    }
+                    case TokenType::ModuleInfo: {
+                        ConstantIndex name = parseConstantIndex();
+                        cp.addModuleInfo(name);
+                        break;
+                    }
+                    case TokenType::ClassInfo: {
+                        ConstantIndex module = parseConstantIndex();
+                        parseComma();
+                        ConstantIndex name = parseConstantIndex();
+                        cp.addClassInfo(module, name);
+                        break;
+                    }
+                    case TokenType::FieldInfo: {
+                        ConstantIndex clas = parseConstantIndex();
+                        parseComma();
+                        ConstantIndex name = parseConstantIndex();
+                        cp.addFieldInfo(clas, name);
+                        break;
+                    }
+                    case TokenType::MethodInfo: {
+                        ConstantIndex clas = parseConstantIndex();
+                        parseComma();
+                        ConstantIndex name = parseConstantIndex();
+                        cp.addMethodInfo(clas, name);
+                        break;
+                    }
+                    case TokenType::FunctionInfo: {
+                        ConstantIndex module = parseConstantIndex();
+                        parseComma();
+                        ConstantIndex name = parseConstantIndex();
+                        cp.addFunctionInfo(module, name);
+                        break;
+                    }
+                    default:
+                        errorAt(token, "unknown .constpool directive '" + token.getText() + "'");
                 }
-                case TokenType::Short: {
-                    intmax_t value = parseInt();
-                    if (value < INT16_MIN || value > INT16_MAX) errorAt(token, "short constant out of range");
-                    cp.addShort(static_cast<int16_t>(value));
-                    break;
-                }
-                case TokenType::Int: {
-                    intmax_t value = parseInt();
-                    if (value < INT32_MIN || value > INT32_MAX) errorAt(token, "int constant out of range");
-                    cp.addInt(static_cast<int32_t>(value));
-                    break;
-                }
-                case TokenType::Long: {
-                    intmax_t value = parseInt();
-                    if (value < INT64_MIN || value > INT64_MAX) errorAt(token, "long constant out of range");
-                    cp.addLong(static_cast<int64_t>(value));
-                    break;
-                }
-                case TokenType::Float: {
-                    errorAt(token, "float constant not implemented");
-                }
-                case TokenType::Double: {
-                    errorAt(token, "double constant not implemented");
-                }
-                case TokenType::String: {
-                    cp.addString(parseString());
-                    break;
-                }
-                case TokenType::ModuleInfo: {
-                    ConstantIndex name = parseConstantIndex();
-                    cp.addModuleInfo(name);
-                    break;
-                }
-                case TokenType::ClassInfo: {
-                    ConstantIndex module = parseConstantIndex();
-                    parseComma();
-                    ConstantIndex name = parseConstantIndex();
-                    cp.addClassInfo(module, name);
-                    break;
-                }
-                case TokenType::FieldInfo: {
-                    ConstantIndex clas = parseConstantIndex();
-                    parseComma();
-                    ConstantIndex name = parseConstantIndex();
-                    cp.addFieldInfo(clas, name);
-                    break;
-                }
-                case TokenType::MethodInfo: {
-                    ConstantIndex clas = parseConstantIndex();
-                    parseComma();
-                    ConstantIndex name = parseConstantIndex();
-                    cp.addMethodInfo(clas, name);
-                    break;
-                }
-                case TokenType::FunctionInfo: {
-                    ConstantIndex module = parseConstantIndex();
-                    parseComma();
-                    ConstantIndex name = parseConstantIndex();
-                    cp.addFunctionInfo(module, name);
-                    break;
-                }
-                default:
-                    errorAt(token, "unknown .constpool directive '" + token.getText() + "'");
+            } catch (const Abort& a) {
+                synchronize();
             }
         }
     }
@@ -1143,6 +1248,8 @@ namespace bibbleasm {
             TokenType::Method,
         };
 
+        mCurrentSegment = SegmentKind::Class;
+
         std::optional<ConstantIndex> name;
         std::optional<ConstantIndex> superClass;
 
@@ -1154,35 +1261,39 @@ namespace bibbleasm {
         while (std::ranges::find(keywords, current().getType()) != keywords.end()
             && current().getType() != TokenType::Segment) {
 
-            const Token& token = consume();
+            try {
+                const Token& token = consume();
 
-            switch (token.getType()) {
-                case TokenType::Name: {
-                    if (name.has_value()) errorAt(token, "duplicate 'name' in .class segment");
-                    name = parseConstantIndex();
-                    break;
+                switch (token.getType()) {
+                    case TokenType::Name: {
+                        if (name.has_value()) errorAt(token, "duplicate 'name' in .class segment");
+                        name = parseConstantIndex();
+                        break;
+                    }
+                    case TokenType::SuperClass: {
+                        if (superClass.has_value()) errorAt(token, "duplicate 'superclass' in .class segment");
+                        superClass = parseConstantIndex();
+                        break;
+                    }
+                    case TokenType::Field: {
+                        uint8_t typeID = parseTypeID();
+                        parseComma();
+                        ConstantIndex fieldName = parseConstantIndex();
+                        fields.push_back({typeID, fieldName});
+                        break;
+                    }
+                    case TokenType::Method: {
+                        ConstantIndex methodName = parseConstantIndex();
+                        parseComma();
+                        ConstantIndex function = parseConstantIndex();
+                        methods.push_back({methodName, function});
+                        break;
+                    }
+                    default:
+                        errorAt(token, "unknown .class directive '" + token.getText() + "'");
                 }
-                case TokenType::SuperClass: {
-                    if (superClass.has_value()) errorAt(token, "duplicate 'superclass' in .class segment");
-                    superClass = parseConstantIndex();
-                    break;
-                }
-                case TokenType::Field: {
-                    uint8_t typeID = parseTypeID();
-                    parseComma();
-                    ConstantIndex fieldName = parseConstantIndex();
-                    fields.push_back({typeID, fieldName});
-                    break;
-                }
-                case TokenType::Method: {
-                    ConstantIndex methodName = parseConstantIndex();
-                    parseComma();
-                    ConstantIndex function = parseConstantIndex();
-                    methods.push_back({methodName, function});
-                    break;
-                }
-                default:
-                    errorAt(token, "unknown .class directive '" + token.getText() + "'");
+            } catch (const Abort& a) {
+                synchronize();
             }
         }
 
@@ -1204,6 +1315,8 @@ namespace bibbleasm {
             TokenType::EndCode,
         };
 
+        mCurrentSegment = SegmentKind::Function;
+
         std::optional<ConstantIndex> name;
         std::optional<uint16_t> flags;
         std::optional<uint16_t> registers;
@@ -1214,54 +1327,62 @@ namespace bibbleasm {
         while (std::ranges::find(keywords, current().getType()) != keywords.end()
             && current().getType() != TokenType::Segment) {
 
-            const Token& token = consume();
+            try {
+                const Token& token = consume();
 
-            switch (token.getType()) {
-                case TokenType::Name: {
-                    if (name.has_value()) errorAt(token, "duplicate 'name' in .function segment");
-                    name = parseConstantIndex();
-                    break;
-                }
-                case TokenType::Flags: {
-                    if (flags.has_value()) errorAt(token, "duplicate 'flags' in .function segment");
-                    flags = parseUInt16();
-                    break;
-                }
-                case TokenType::Registers: {
-                    if (registers.has_value()) errorAt(token, "duplicate 'registers' in .function segment");
-                    registers = parseUInt16();
-                    break;
-                }
-                case TokenType::Parameters: {
-                    if (parameters.has_value()) errorAt(token, "duplicate 'parameters' in .function segment");
-                    parameters = parseUInt16();
-                    break;
-                }
-                case TokenType::Code: {
-                    if (codeStart.has_value()) errorAt(token, "duplicate 'code' in .function segment");
-                    codeStart = mPosition - 1;
-
-                    while (current().getType() != TokenType::EndCode) {
-                        if (current().getType() == TokenType::End) error("unexpected end of file inside 'code' block; expected 'endcode'");
-                        consume();
+                switch (token.getType()) {
+                    case TokenType::Name: {
+                        if (name.has_value()) errorAt(token, "duplicate 'name' in .function segment");
+                        name = parseConstantIndex();
+                        break;
                     }
+                    case TokenType::Flags: {
+                        if (flags.has_value()) errorAt(token, "duplicate 'flags' in .function segment");
+                        flags = parseUInt16();
+                        break;
+                    }
+                    case TokenType::Registers: {
+                        if (registers.has_value()) errorAt(token, "duplicate 'registers' in .function segment");
+                        registers = parseUInt16();
+                        break;
+                    }
+                    case TokenType::Parameters: {
+                        if (parameters.has_value()) errorAt(token, "duplicate 'parameters' in .function segment");
+                        parameters = parseUInt16();
+                        break;
+                    }
+                    case TokenType::Code: {
+                        if (codeStart.has_value()) errorAt(token, "duplicate 'code' in .function segment");
+                        codeStart = mPosition - 1;
 
-                    codeEnd = mPosition;
-                    consume();
+                        mInsideCode = true;
 
-                    break;
+                        while (current().getType() != TokenType::EndCode) {
+                            if (current().getType() == TokenType::End) error("unexpected end of file inside 'code' block; expected 'endcode'");
+                            consume();
+                        }
+
+                        codeEnd = mPosition;
+                        consume();
+
+                        mInsideCode = false;
+
+                        break;
+                    }
+                    case TokenType::EndCode: {
+                        if (codeEnd.has_value()) errorAt(token, "duplicate 'endcode' in .function segment");
+                        codeEnd = mPosition - 1;
+                        break;
+                    }
+                    case TokenType::Identifier:
+                    case TokenType::Instruction:
+                        break;
+
+                    default:
+                        errorAt(token, "unknown .function directive '" + token.getText() + "'");
                 }
-                case TokenType::EndCode: {
-                    if (codeEnd.has_value()) errorAt(token, "duplicate 'endcode' in .function segment");
-                    codeEnd = mPosition - 1;
-                    break;
-                }
-                case TokenType::Identifier:
-                case TokenType::Instruction:
-                    break;
-
-                default:
-                    errorAt(token, "unknown .function directive '" + token.getText() + "'");
+            } catch (const Abort& a) {
+                synchronize();
             }
         }
 
@@ -1279,11 +1400,18 @@ namespace bibbleasm {
             size_t savedPosition = mPosition;
             mPosition = codeStart.value() + 1;
 
+            mInsideCode = true;
+
             while (mPosition < codeEnd.value()) {
-                parseInstruction(as);
+                try {
+                    parseInstruction(as);
+                } catch (const Abort& a) {
+                    synchronize();
+                }
             }
 
             mPosition = savedPosition;
+            mInsideCode = false;
         }
     }
 
