@@ -85,7 +85,7 @@ namespace bibbleasm {
             : mTokenType(tokenType)
             , mSourceLocation(location)
             , mText(std::move(text))
-            , mRawLength(rawLength == 0 ? text.size() : rawLength) {}
+            , mRawLength(rawLength == 0 ? mText.size() : rawLength) {}
 
         TokenType getType() const { return mTokenType; }
         SourceLocation getSourceLocation() const { return mSourceLocation; }
