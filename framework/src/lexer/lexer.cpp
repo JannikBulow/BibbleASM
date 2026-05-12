@@ -324,6 +324,7 @@ namespace bibbleasm {
                 return Token(TokenType::Hash, start, std::string(1, current()));
 
             case '"': {
+                size_t startPos = mPosition;
                 consume();
                 std::string value;
                 while (current() != '"') {
@@ -355,7 +356,7 @@ namespace bibbleasm {
                     }
                     consume();
                 }
-                return Token(TokenType::StringLiteral, start, std::move(value));
+                return Token(TokenType::StringLiteral, start, std::move(value), mPosition + 1 - startPos); // The +1 is to capture the closing "
             }
 
             default:
