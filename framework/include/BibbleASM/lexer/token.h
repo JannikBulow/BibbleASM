@@ -79,7 +79,7 @@ namespace bibbleasm {
 
     class Token {
     public:
-        Token(TokenType tokenType, SourceLocation location, std::string text = "")
+        Token(TokenType tokenType, SourceLocation location, std::string text)
             : mTokenType(tokenType)
             , mText(std::move(text))
             , mSourceLocation(location) {}
