@@ -13,6 +13,8 @@ namespace bibbleasm {
     enum class TokenType {
         Error,
 
+        Comment,
+
         Comma,
         Colon,
         Hash,

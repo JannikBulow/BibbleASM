@@ -311,11 +311,13 @@ namespace bibbleasm {
         switch (current()) {
             case ',':
                 return Token(TokenType::Comma, start, std::string(1, current()));
-            case ';':
+            case ';': {
+                std::string text;
                 while (current() != '\n') {
-                    consume();
+                    text += consume();
                 }
-                return std::nullopt;
+                return Token(TokenType::Comment, start, std::move(text));
+            }
             case ':':
                 return Token(TokenType::Colon, start, std::string(1, current()));
             case '#':
