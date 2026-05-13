@@ -7,6 +7,7 @@
 
 #include "BibbleASM/api.h"
 
+#include <optional>
 #include <vector>
 
 namespace bibbleasm {
