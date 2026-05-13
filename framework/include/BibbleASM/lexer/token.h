@@ -13,6 +13,8 @@ namespace bibbleasm {
     enum class TokenType {
         Error,
 
+        Comment,
+
         Comma,
         Colon,
         Hash,
@@ -79,14 +81,16 @@ namespace bibbleasm {
 
     class Token {
     public:
-        Token(TokenType tokenType, SourceLocation location, std::string text = "")
+        Token(TokenType tokenType, SourceLocation location, std::string text, size_t rawLength = 0)
             : mTokenType(tokenType)
+            , mSourceLocation(location)
             , mText(std::move(text))
-            , mSourceLocation(location) {}
+            , mRawLength(rawLength == 0 ? mText.size() : rawLength) {}
 
         TokenType getType() const { return mTokenType; }
-        const std::string& getText() const { return mText; }
         SourceLocation getSourceLocation() const { return mSourceLocation; }
+        const std::string& getText() const { return mText; }
+        size_t getRawLength() const { return mRawLength; }
 
         std::string toString() const { return TokenTypeToString(mTokenType) + '(' + mText + ')'; }
 
@@ -96,8 +100,9 @@ namespace bibbleasm {
 
     private:
         TokenType mTokenType;
-        std::string mText;
         SourceLocation mSourceLocation;
+        std::string mText;
+        size_t mRawLength;
     };
 
     inline std::ostream& operator<<(std::ostream& out, const Token& token) {

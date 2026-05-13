@@ -192,7 +192,7 @@ namespace bibbleasm {
             }
             consume();
         }
-        tokens.emplace_back(TokenType::End, SourceLocation(mLine, mColumn));
+        tokens.emplace_back(TokenType::End, SourceLocation(mLine, mColumn), "");
 
         return tokens;
     }
@@ -261,7 +261,7 @@ namespace bibbleasm {
             }
 
             if (auto it = keywords.find(text); it != keywords.end()) {
-                return Token(it->second, start);
+                return Token(it->second, start, std::move(text));
             }
 
             return Token(TokenType::Identifier, start, std::move(text));
@@ -310,18 +310,21 @@ namespace bibbleasm {
 
         switch (current()) {
             case ',':
-                return Token(TokenType::Comma, start);
-            case ';':
+                return Token(TokenType::Comma, start, std::string(1, current()));
+            case ';': {
+                std::string text;
                 while (current() != '\n') {
-                    consume();
+                    text += consume();
                 }
-                return std::nullopt;
+                return Token(TokenType::Comment, start, std::move(text));
+            }
             case ':':
-                return Token(TokenType::Colon, start);
+                return Token(TokenType::Colon, start, std::string(1, current()));
             case '#':
-                return Token(TokenType::Hash, start);
+                return Token(TokenType::Hash, start, std::string(1, current()));
 
             case '"': {
+                size_t startPos = mPosition;
                 consume();
                 std::string value;
                 while (current() != '"') {
@@ -353,7 +356,7 @@ namespace bibbleasm {
                     }
                     consume();
                 }
-                return Token(TokenType::StringLiteral, start, std::move(value));
+                return Token(TokenType::StringLiteral, start, std::move(value), mPosition + 1 - startPos); // The +1 is to capture the closing "
             }
 
             default:

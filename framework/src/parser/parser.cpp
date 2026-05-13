@@ -10,6 +10,13 @@ namespace bibbleasm {
         , mTokens(tokens)
         , mErrorReporter(errorReporter) {
         buildInstructionParsers();
+
+        auto it = std::remove_if(
+            mTokens.begin(),
+            mTokens.end(),
+            [](const Token& token) { return token.getType() == TokenType::Comment; }
+        );
+        mTokens.erase(it, mTokens.end());
     }
 
     ModuleBuilder Parser::parse() {
