@@ -16,7 +16,7 @@ class_info #7, #2
 field_info #9, #3
 field_info #9, #4
 method_info #9, #5
-string "main"
+string ".main"
 
 segment .class
 name #2 ; string
