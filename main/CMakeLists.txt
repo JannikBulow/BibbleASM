@@ -17,6 +17,8 @@ target_compile_features(BibbleASM-main PUBLIC cxx_std_20)
 
 target_link_libraries(BibbleASM-main PRIVATE BibbleASM-framework-shared)
 
+set_target_properties(BibbleASM-main PROPERTIES OUTPUT_NAME "basm")
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_custom_command(TARGET BibbleASM-main PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
