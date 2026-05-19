@@ -5,54 +5,33 @@ name #1
 ; Indexing is in order of definitions, starting at 1 to leave implicit null constant at 0.
 segment .constpool
 string "Main"
-string "Object"
-string "x"
-string "y"
-string "add"
-string "addImpl"
-module_info #1
-function_info #7, #6
-class_info #7, #2
-field_info #9, #3
-field_info #9, #4
-method_info #9, #5
 string ".main"
-
-segment .class
-name #2 ; string
-superclass #0 ; class_info or null
-field int, #3 ; type, string
-field int, #4 ; type, string
-method #5, #8 ; name, function_info (implementation)
-
-; You'd do `segment .class` again to define another class
+string "Intrinsics"
+string "printString"
+module_info #3
+function_info #5, #4
 
 segment .function
-name #6 ; string
-flags 0x0000 ; regular ole function
-registers 3
-parameters 1
-code
-    getfield r1, r0, #10 ; dst, obj, field_info
-    getfield r2, r0, #11 ; dst, obj, field_info
-    add r1, r1, r2 ; dst, lhs, rhs
-    return r1 ; value
-endcode
-
-; You'd do `segment .function` again to define another function
-
-segment .function
-name #13
+name #2
 flags 0x0000
-registers 3
-parameters 0
+registers 4
+parameters 1
+; r0 = args: String[]
+; r1 = i: ulong
+; r2 = arg: String
+; r3 = temp variables
 code
-    load_imm r1, 34
-    load_imm r2, 35
-    newinstance r0, #9
-    setfield r0, #10, r1
-    setfield r0, #11, r2
-    dispatchmethod r1, r0, #12
-    call_dyn r2, r1, r0
-    return r2
+    load_imm r1, 0
+    loop:
+        arraylength r3, r0
+        icmp r3, r1, r3
+        jge r3, loop_end
+
+        arrayget r2, r0, r1
+        call r3, #6, r2
+        inc r1, 1
+        jmp loop
+    loop_end:
+    load_imm r3, 0
+    return r3
 endcode
