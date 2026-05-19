@@ -13,6 +13,7 @@
 #include <iostream>
 #include <optional>
 #include <sstream>
+#include <vector>
 
 static int CompileOne(const std::string& inputFile, const std::string& outputFile) {
     std::ifstream input(inputFile);
@@ -52,8 +53,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::optional<std::string> inputFile;
-    std::optional<std::string> outputFile;
+    std::vector<std::string> inputFiles;
 
     for (int i = 1; i < argc; i++) {
         std::string_view arg = argv[i];
@@ -80,36 +80,38 @@ int main(int argc, char** argv) {
                     return 0;
                 }
 
-                case 'o': {
-                    if (arg.size() == 2) {
-                        outputFile = argv[++i];
-                    } else {
-                        outputFile = arg.substr(2);
-                    }
-                    break;
-                }
-
                 default:
                     std::cerr << std::format("basm: unrecognized command-line option '\x1b[1m{}\x1b[0m'", arg);
                     return 1;
             }
         } else {
-            if (inputFile.has_value()) {
-                std::cerr << std::format("basm: input file already configured: '{}'", inputFile.value());
-                return 1;
-            }
-            inputFile = arg;
+            inputFiles.emplace_back(arg);
         }
     }
 
-    if (!inputFile.has_value()) {
-        std::cerr << "basm: no input files\n";
+    if (inputFiles.empty()) {
+        std::cerr << "basm: no input file(s)\n";
         return 1;
     }
 
-    if (!outputFile.has_value()) {
-        outputFile = inputFile->substr(0, inputFile->rfind('.')) + ".bmod";
+    std::vector<int> results;
+    results.reserve(inputFiles.size());
+
+    for (const auto& input : inputFiles) {
+        std::string outputFile = input.substr(0, input.rfind('.')) + ".bmod";
+        results.push_back(CompileOne(input, outputFile));
     }
 
-    return CompileOne(inputFile.value(), outputFile.value());
+    for (int result : results) {
+        if (result != 0) {
+            std::cerr << "error reported: every result: ";
+            for (int result1 : results) {
+                std::cerr << result1 << " ";
+            }
+            std::cerr << std::endl;
+            return 1;
+        }
+    }
+
+    return 0;
 }
