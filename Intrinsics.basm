@@ -1,0 +1,20 @@
+segment .module
+version 1
+name #1
+
+segment .constpool
+string "Intrinsics"
+string "print"
+string "printString"
+
+segment .function
+name #2
+flags 0x0001
+registers 1
+parameters 1
+
+segment .function
+name #3
+flags 0x0001
+registers 1
+parameters 1
