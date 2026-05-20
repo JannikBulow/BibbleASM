@@ -32,6 +32,6 @@ code
         inc r1, 1
         jmp loop
     loop_end:
-    load_imm r3, 0
+    load_null r3
     return r3
 endcode

@@ -300,7 +300,8 @@ namespace bibbleasm {
                 addBranch(resolvedBranch, 0xF1);
                 break;
 
-            // ---- NEWFUTURE / RETURN: one reg ----
+            // ---- one reg ----
+            case LOAD_NULL:
             case NEWFUTURE:
             case RETURN:
                 addReg(std::get<Register>(ops[0]).index, 0xF0);
@@ -378,9 +379,6 @@ namespace bibbleasm {
                 addReg(std::get<Register>(ops[2]).index, 0xF1);
                 addReg(std::get<Register>(ops[3]).index, 0xF2);
                 break;
-
-            default:
-                std::exit(67);
         }
 
         return prefixBytes + 1 + dataBytes;
@@ -571,6 +569,7 @@ namespace bibbleasm {
                 emitBranch(resolvedBranch, 0xF1);
                 break;
 
+            case LOAD_NULL:
             case NEWFUTURE:
             case RETURN:
                 emitReg(std::get<Register>(ops[0]).index, 0xF0);

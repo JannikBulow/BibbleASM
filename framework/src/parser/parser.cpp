@@ -107,6 +107,12 @@ namespace bibbleasm {
                     ib.load_imm(d, i);
                 }
             },
+            {
+                "load_null", [=](IB& ib) {
+                    auto d = R();
+                    ib.load_null(d);
+                }
+            },
 
             // ---- Integer arithmetic ----
             {

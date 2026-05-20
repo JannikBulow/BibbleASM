@@ -55,6 +55,10 @@ namespace bibbleasm {
             return emit(build::load_imm(dst, imm));
         }
 
+        InstructionBuilder& load_null(Register dst) {
+            return emit(build::load_null(dst));
+        }
+
         // ---- Integer arithmetic ----
 
         InstructionBuilder& add(Register dst, Register lhs, Register rhs) {

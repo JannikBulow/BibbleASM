@@ -49,6 +49,10 @@ namespace bibbleasm::build {
         return Instruction{LOAD_IMM, {dst, imm}};
     }
 
+    inline Instruction load_null(Register dst) {
+        return Instruction{LOAD_NULL, {dst}};
+    }
+
     // ============================================================
     //  Integer arithmetic
     // ============================================================

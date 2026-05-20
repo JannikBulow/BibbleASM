@@ -15,6 +15,7 @@ namespace bibbleasm {
 
         "load_const",
         "load_imm",
+        "load_null",
 
         "add",
         "sub",
