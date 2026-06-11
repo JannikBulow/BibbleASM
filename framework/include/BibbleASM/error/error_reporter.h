@@ -3,7 +3,7 @@
 #ifndef BIBBLEASM_ERROR_ERROR_REPORTER_H
 #define BIBBLEASM_ERROR_ERROR_REPORTER_H 1
 
-#include "BIbbleASM/api.h"
+#include "BibbleASM/api.h"
 
 #include <string>
 
