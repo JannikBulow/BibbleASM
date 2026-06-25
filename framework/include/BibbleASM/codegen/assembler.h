@@ -13,27 +13,33 @@
 #include <unordered_map>
 
 namespace bibbleasm {
+    using InstructionId = size_t;
+
     struct LabeledInstruction {
         std::optional<std::string> label;
         Instruction insn;
+        InstructionId id;
 
-        explicit LabeledInstruction(Instruction insn)
-            : insn(std::move(insn)) {}
+        explicit LabeledInstruction(Instruction insn, InstructionId id)
+            : insn(std::move(insn))
+            , id(id) {}
 
-        LabeledInstruction(std::string label, Instruction insn)
-            : label(std::move(label)), insn(std::move(insn)) {}
+        LabeledInstruction(std::string label, Instruction insn, InstructionId id)
+            : label(std::move(label))
+            , insn(std::move(insn))
+            , id(id) {}
     };
 
     class BIBBLEASM_EXPORT Assembler {
     public:
-        size_t getLastInstructionIndex() const { return mInstructions.size() - 1; }
+        InstructionId getLastInstructionId() const;
 
         void label(std::string name);
 
         void emit(Instruction insn);
         void emit(std::span<Instruction> insns);
 
-        void emit(size_t insertAfterIdx, Instruction insn);
+        InstructionId emit(InstructionId insertAfterId, Instruction insn);
 
         void emit(std::string lbl, Instruction insn) {
             label(std::move(lbl));
@@ -55,6 +61,8 @@ namespace bibbleasm {
         std::vector<LabeledInstruction> mInstructions;
         std::unordered_map<std::string, size_t> mLabels;
         std::optional<std::string> mPendingLabel;
+
+        InstructionId mNextInstructionId = 0;
 
         std::vector<size_t> computeOffsets(const std::vector<int64_t>& resolvedBranches) const;
         std::vector<int64_t> resolveBranches(const std::vector<size_t>& offsets) const;

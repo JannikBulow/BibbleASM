@@ -3,6 +3,10 @@
 #include "BibbleASM/codegen/assembler.h"
 
 namespace bibbleasm {
+    InstructionId Assembler::getLastInstructionId() const {
+        return mInstructions.back().id;
+    }
+
     void Assembler::label(std::string name) {
         if (mLabels.contains(name)) {
             std::exit(67);
@@ -14,10 +18,10 @@ namespace bibbleasm {
 
     void Assembler::emit(Instruction insn) {
         if (mPendingLabel.has_value()) {
-            mInstructions.emplace_back(std::move(mPendingLabel.value()), std::move(insn));
+            mInstructions.emplace_back(std::move(mPendingLabel.value()), std::move(insn), mNextInstructionId++);
             mPendingLabel.reset();
         } else {
-            mInstructions.emplace_back(std::move(insn));
+            mInstructions.emplace_back(std::move(insn), mNextInstructionId++);
         }
     }
 
@@ -27,10 +31,15 @@ namespace bibbleasm {
         }
     }
 
-    void Assembler::emit(size_t insertAfterIdx, Instruction insn) {
-        if (insertAfterIdx >= mInstructions.size()) return; //TODO: error case
-        
-        mInstructions.emplace(mInstructions.begin() + static_cast<std::vector<LabeledInstruction>::difference_type>(insertAfterIdx) + 1, std::move(insn));
+    InstructionId Assembler::emit(InstructionId insertAfterId, Instruction insn) {
+        auto it = std::ranges::find_if(mInstructions, [insertAfterId](const LabeledInstruction& insn) {
+           return insn.id == insertAfterId;
+        });
+        if (it == mInstructions.end()) std::exit(67);
+
+        InstructionId id = mNextInstructionId++;
+        mInstructions.emplace(it + 1, std::move(insn), id);
+        return id;
     }
 
     template<class T>
