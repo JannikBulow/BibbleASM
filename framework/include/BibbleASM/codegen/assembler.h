@@ -26,7 +26,7 @@ namespace bibbleasm {
 
     class BIBBLEASM_EXPORT Assembler {
     public:
-        size_t instructionCount() const { return mInstructions.size(); }
+        size_t getLastInstructionIndex() const { return mInstructions.size() - 1; }
 
         void label(std::string name);
 
