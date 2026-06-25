@@ -17,6 +17,8 @@ namespace bibbleasm {
         InstructionBuilder(const InstructionBuilder&) = delete;
         InstructionBuilder& operator=(const InstructionBuilder&) = delete;
 
+        Assembler& assembler() { return mAssembler; }
+
         // ---- Label control ----
 
         /// Define a label at the current (next) instruction position.

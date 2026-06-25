@@ -27,6 +27,12 @@ namespace bibbleasm {
         }
     }
 
+    void Assembler::emit(size_t insertAfterIdx, Instruction insn) {
+        if (insertAfterIdx >= mInstructions.size()) return; //TODO: error case
+        
+        mInstructions.emplace(mInstructions.begin() + static_cast<std::vector<LabeledInstruction>::difference_type>(insertAfterIdx) + 1, std::move(insn));
+    }
+
     template<class T>
     static void PushLE(std::vector<uint8_t>& out, T value, size_t byteWidth) {
         for (size_t i = 0; i < byteWidth; i++) {

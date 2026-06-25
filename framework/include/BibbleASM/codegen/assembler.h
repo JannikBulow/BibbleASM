@@ -26,10 +26,14 @@ namespace bibbleasm {
 
     class BIBBLEASM_EXPORT Assembler {
     public:
+        size_t instructionCount() const { return mInstructions.size(); }
+
         void label(std::string name);
 
         void emit(Instruction insn);
         void emit(std::span<Instruction> insns);
+
+        void emit(size_t insertAfterIdx, Instruction insn);
 
         void emit(std::string lbl, Instruction insn) {
             label(std::move(lbl));
