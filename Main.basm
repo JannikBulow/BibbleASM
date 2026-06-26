@@ -14,24 +14,25 @@ function_info #5, #4
 segment .function
 name #2
 flags 0x0000
-registers 4
+registers 5
 parameters 1
 ; r0 = args: String[]
 ; r1 = i: ulong
 ; r2 = arg: String
-; r3 = temp variables
+; r3 = args.length: ulong
+; r4 = temp variables
 code
     load_imm r1, 0
+    arraylength r3, r0
     loop:
-        arraylength r3, r0
-        icmp r3, r1, r3
-        jge r3, loop_end
+        icmp r4, r1, r3
+        jge r4, loop_end
 
         arrayget r2, r0, r1
-        call r3, #6, r2
+        call r4, #6, r2
         inc r1, 1
         jmp loop
     loop_end:
-    load_null r3
-    return r3
+    load_null r4
+    return r4
 endcode
