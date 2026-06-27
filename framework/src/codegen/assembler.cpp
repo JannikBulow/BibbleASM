@@ -4,6 +4,7 @@
 
 namespace bibbleasm {
     InstructionId Assembler::getLastInstructionId() const {
+        if (mInstructions.empty()) return -1;
         return mInstructions.back().id;
     }
 
