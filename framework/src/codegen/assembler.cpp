@@ -79,7 +79,30 @@ namespace bibbleasm {
     }
 
     std::string Assembler::disassemble() {
-        return "";
+        std::string out;
+
+        for (const LabeledInstruction& instruction : mInstructions) {
+            if (instruction.label) {
+                out += *instruction.label;
+                out += ":\n";
+            }
+
+            out += "    ";
+            out += opcodeutils::GetOpcodeName(instruction.insn.getOpcode());
+
+            if (instruction.insn.getOperandCount() > 0) {
+                out += ' ';
+
+                const auto& operands = instruction.insn.operands();
+                for (size_t i = 0; i < operands.size() - 1; i++) {
+                    out += GetOperandIdentifier(operands[i]);
+                    out += ", ";
+                }
+                out += GetOperandIdentifier(operands.back());
+            }
+        }
+
+        return out;
     }
 
     std::vector<size_t> Assembler::computeOffsets(const std::vector<int64_t>& resolvedBranches) const {

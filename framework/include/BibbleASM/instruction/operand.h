@@ -65,6 +65,8 @@ namespace bibbleasm {
         Label,
         BranchOffset
     >;
+
+    std::string GetOperandIdentifier(const Operand& operand);
 }
 
 

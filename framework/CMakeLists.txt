@@ -26,6 +26,7 @@ set(SOURCES
     src/error/error_reporter.cpp
 
     src/instruction/instruction.cpp
+    src/instruction/operand.cpp
 
     src/lexer/lexer.cpp
     src/lexer/token.cpp
