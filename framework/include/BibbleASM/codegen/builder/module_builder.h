@@ -55,6 +55,9 @@ namespace bibbleasm {
         ModuleBuilder(ModuleBuilder&&) = default;
         ModuleBuilder& operator=(ModuleBuilder&&) = default;
 
+        const std::vector<std::unique_ptr<ClassBuilder>>& classes() const { return mClasses; }
+        const std::vector<std::unique_ptr<FunctionBuilder>>& functions() const { return mFunctions; }
+
         ConstPoolBuilder& constPool() { return mConstPool; }
         const ConstPoolBuilder& constPool() const { return mConstPool; }
 
