@@ -100,7 +100,11 @@ namespace bibbleasm {
                 }
                 out += GetOperandIdentifier(operands.back());
             }
+
+            out += '\n';
         }
+
+        out.pop_back(); // remove newline
 
         return out;
     }
