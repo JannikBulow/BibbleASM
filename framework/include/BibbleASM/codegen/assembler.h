@@ -56,7 +56,7 @@ namespace bibbleasm {
                     new (&insn) Instruction(other.insn);
                     break;
                 case Label:
-                    new (&insn) Instruction(other.insn);
+                    new (&label) std::string(other.label);
                     break;
             }
         }
@@ -69,7 +69,7 @@ namespace bibbleasm {
                     new (&insn) Instruction(std::move(other.insn));
                     break;
                 case Label:
-                    new (&insn) Instruction(std::move(other.insn));
+                    new (&label) std::string(std::move(other.label));
                     break;
             }
         }
@@ -86,30 +86,56 @@ namespace bibbleasm {
         }
 
         AssemblerNode& operator=(const AssemblerNode& other) {
-            id = other.id;
-            type = other.type;
+            if (this == &other) return *this;
+
             switch (type) {
                 case Insn:
-                    insn = other.insn;
+                    insn.~Instruction();
                     break;
                 case Label:
-                    label = other.label;
+                    label.~basic_string();
                     break;
             }
+
+            id = other.id;
+            type = other.type;
+
+            switch (type) {
+                case Insn:
+                    new (&insn) Instruction(other.insn);
+                    break;
+                case Label:
+                    new (&label) std::string(other.label);
+                    break;
+            }
+
             return *this;
         }
 
         AssemblerNode& operator=(AssemblerNode&& other) noexcept {
-            id = other.id;
-            type = other.type;
+            if (this == &other) return *this;
+
             switch (type) {
                 case Insn:
-                    insn = std::move(other.insn);
+                    insn.~Instruction();
                     break;
                 case Label:
-                    label = std::move(other.label);
+                    label.~basic_string();
                     break;
             }
+
+            id = other.id;
+            type = other.type;
+
+            switch (type) {
+                case Insn:
+                    new (&insn) Instruction(std::move(other.insn));
+                    break;
+                case Label:
+                    new (&label) std::string(std::move(other.label));
+                    break;
+            }
+
             return *this;
         }
     };
