@@ -53,10 +53,10 @@ namespace bibbleasm {
             , type(other.type) {
             switch (type) {
                 case Insn:
-                    insn = other.insn;
+                    new (&insn) Instruction(other.insn);
                     break;
                 case Label:
-                    label = other.label;
+                    new (&insn) Instruction(other.insn);
                     break;
             }
         }
@@ -66,10 +66,10 @@ namespace bibbleasm {
             , type(other.type) {
             switch (type) {
                 case Insn:
-                    insn = std::move(other.insn);
+                    new (&insn) Instruction(std::move(other.insn));
                     break;
                 case Label:
-                    label = std::move(other.label);
+                    new (&insn) Instruction(std::move(other.insn));
                     break;
             }
         }
