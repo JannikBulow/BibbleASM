@@ -15,6 +15,7 @@
 namespace bibbleasm {
     using InstructionId = size_t;
 
+    /*
     struct LabeledInstruction {
         std::optional<std::string> label;
         Instruction insn;
@@ -28,6 +29,89 @@ namespace bibbleasm {
             : label(std::move(label))
             , insn(std::move(insn))
             , id(id) {}
+    };
+    */
+
+    struct AssemblerNode {
+        enum Type {
+            Insn,
+            Label
+        };
+
+        InstructionId id;
+        Type type;
+        union {
+            Instruction insn;
+            std::string label;
+        };
+
+        AssemblerNode(InstructionId id, Instruction insn) : id(id), type(Insn), insn(std::move(insn)) {}
+        AssemblerNode(InstructionId id, std::string label) : id(id), type(Label), label(std::move(label)) {}
+
+        AssemblerNode(const AssemblerNode& other)
+            : id(other.id)
+            , type(other.type) {
+            switch (type) {
+                case Insn:
+                    insn = other.insn;
+                    break;
+                case Label:
+                    label = other.label;
+                    break;
+            }
+        }
+
+        AssemblerNode(AssemblerNode&& other) noexcept
+            : id(other.id)
+            , type(other.type) {
+            switch (type) {
+                case Insn:
+                    insn = std::move(other.insn);
+                    break;
+                case Label:
+                    label = std::move(other.label);
+                    break;
+            }
+        }
+
+        ~AssemblerNode() {
+            switch (type) {
+                case Insn:
+                    insn.~Instruction();
+                    break;
+                case Label:
+                    label.~basic_string();
+                    break;
+            }
+        }
+
+        AssemblerNode& operator=(const AssemblerNode& other) {
+            id = other.id;
+            type = other.type;
+            switch (type) {
+                case Insn:
+                    insn = other.insn;
+                    break;
+                case Label:
+                    label = other.label;
+                    break;
+            }
+            return *this;
+        }
+
+        AssemblerNode& operator=(AssemblerNode&& other) noexcept {
+            id = other.id;
+            type = other.type;
+            switch (type) {
+                case Insn:
+                    insn = std::move(other.insn);
+                    break;
+                case Label:
+                    label = std::move(other.label);
+                    break;
+            }
+            return *this;
+        }
     };
 
     class BIBBLEASM_EXPORT Assembler {
@@ -46,23 +130,19 @@ namespace bibbleasm {
             emit(std::move(insn));
         }
 
-        const std::vector<LabeledInstruction>& instructions() const { return mInstructions; }
+        const std::vector<AssemblerNode>& instructions() const { return mInstructions; }
 
         std::vector<uint8_t> assemble();
-        std::string disassemble();
+        std::string disassemble() const;
 
         void reset() {
             mInstructions.clear();
-            mLabelToIds.clear();
-            mIdToPositions.clear();
-            mPendingLabel.reset();
+            mLabels.clear();
         }
 
     private:
-        std::vector<LabeledInstruction> mInstructions;
-        std::unordered_map<std::string, InstructionId> mLabelToIds; // name to id
-        std::unordered_map<InstructionId, size_t> mIdToPositions;
-        std::optional<std::string> mPendingLabel;
+        std::vector<AssemblerNode> mInstructions;
+        std::unordered_map<std::string, size_t> mLabels; // will refer to the next instruction after a given label. computed in assemble()
 
         InstructionId mNextInstructionId = 0;
 

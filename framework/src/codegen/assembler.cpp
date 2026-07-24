@@ -9,22 +9,15 @@ namespace bibbleasm {
     }
 
     void Assembler::label(std::string name) {
-        if (mLabelToIds.contains(name)) {
+        if (mLabels.contains(name)) {
             std::exit(67);
         }
 
-        mPendingLabel = std::move(name);
+        mInstructions.emplace_back(mNextInstructionId++, std::move(name));
     }
 
     void Assembler::emit(Instruction insn) {
-        if (mPendingLabel.has_value()) {
-            InstructionId id = mNextInstructionId++;
-            mLabelToIds[*mPendingLabel] = id;
-            mInstructions.emplace_back(std::move(mPendingLabel.value()), std::move(insn), id);
-            mPendingLabel.reset();
-        } else {
-            mInstructions.emplace_back(std::move(insn), mNextInstructionId++);
-        }
+        mInstructions.emplace_back(mNextInstructionId++, std::move(insn));
     }
 
     void Assembler::emit(std::span<Instruction> insns) {
@@ -34,13 +27,13 @@ namespace bibbleasm {
     }
 
     InstructionId Assembler::emit(InstructionId insertAfterId, Instruction insn) {
-        auto it = std::ranges::find_if(mInstructions, [insertAfterId](const LabeledInstruction& insn) {
+        auto it = std::ranges::find_if(mInstructions, [insertAfterId](const AssemblerNode& insn) {
            return insn.id == insertAfterId;
         });
         if (it == mInstructions.end()) std::exit(67);
 
         InstructionId id = mNextInstructionId++;
-        mInstructions.emplace(it + 1, std::move(insn), id);
+        mInstructions.emplace(it + 1, id, std::move(insn));
         return id;
     }
 
@@ -56,7 +49,12 @@ namespace bibbleasm {
         if (mInstructions.empty()) return {};
 
         for (size_t i = 0; i < mInstructions.size(); i++) {
-            mIdToPositions[mInstructions[i].id] = i;
+            if (mInstructions[i].type == AssemblerNode::Label) {
+                size_t nextInstruction = i + 1;
+                while (mInstructions[nextInstruction].type != AssemblerNode::Insn) nextInstruction++;
+
+                mLabels[mInstructions[i].label] = nextInstruction;
+            }
         }
 
         std::vector<int64_t> branches(mInstructions.size(), 0);
@@ -74,7 +72,13 @@ namespace bibbleasm {
         out.reserve(offsets.back());
 
         for (size_t i = 0; i < mInstructions.size(); i++) {
-            EmitInstruction(mInstructions[i].insn, branches[i], out);
+            switch (mInstructions[i].type) {
+                case AssemblerNode::Insn:
+                    EmitInstruction(mInstructions[i].insn, branches[i], out);
+                    break;
+                case AssemblerNode::Label:
+                    break;
+            }
         }
 
         if (out.size() != offsets.back()) {
@@ -84,30 +88,30 @@ namespace bibbleasm {
         return out;
     }
 
-    std::string Assembler::disassemble() {
+    std::string Assembler::disassemble() const {
         std::string out;
 
-        for (const LabeledInstruction& instruction : mInstructions) {
-            if (instruction.label) {
-                out += *instruction.label;
+        for (const AssemblerNode& instruction : mInstructions) {
+            if (instruction.type == AssemblerNode::Label) {
+                out += instruction.label;
                 out += ":\n";
-            }
+            } else {
+                out += "    ";
+                out += opcodeutils::GetOpcodeName(instruction.insn.getOpcode());
 
-            out += "    ";
-            out += opcodeutils::GetOpcodeName(instruction.insn.getOpcode());
+                if (instruction.insn.getOperandCount() > 0) {
+                    out += ' ';
 
-            if (instruction.insn.getOperandCount() > 0) {
-                out += ' ';
-
-                const auto& operands = instruction.insn.operands();
-                for (size_t i = 0; i < operands.size() - 1; i++) {
-                    out += GetOperandIdentifier(operands[i]);
-                    out += ", ";
+                    const auto& operands = instruction.insn.operands();
+                    for (size_t i = 0; i < operands.size() - 1; i++) {
+                        out += GetOperandIdentifier(operands[i]);
+                        out += ", ";
+                    }
+                    out += GetOperandIdentifier(operands.back());
                 }
-                out += GetOperandIdentifier(operands.back());
-            }
 
-            out += '\n';
+                out += '\n';
+            }
         }
 
         out.pop_back(); // remove newline
@@ -131,6 +135,8 @@ namespace bibbleasm {
         std::vector<int64_t> result(mInstructions.size(), 0);
 
         for (size_t i = 0; i < mInstructions.size(); i++) {
+            if (mInstructions[i].type != AssemblerNode::Insn) continue;
+
             const auto& insn = mInstructions[i].insn;
             if (!insn.isBranch()) continue;
 
@@ -138,12 +144,12 @@ namespace bibbleasm {
             bool found = false;
             for (const auto& op : insn.operands()) {
                 if (const auto* label = std::get_if<Label>(&op)) {
-                    auto it = mLabelToIds.find(label->name);
-                    if (it == mLabelToIds.end()) {
+                    auto it = mLabels.find(label->name);
+                    if (it == mLabels.end()) {
                         std::exit(67);
                     }
 
-                    size_t targetIndex = mIdToPositions.at(it->second);
+                    size_t targetIndex = it->second;
                     size_t nextOffset = (i + 1 < offsets.size()) ? offsets[i + 1] : offsets.back();
                     size_t targetOffset = offsets[targetIndex];
 
