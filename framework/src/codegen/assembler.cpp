@@ -124,6 +124,8 @@ namespace bibbleasm {
         offsets.reserve(resolvedBranches.size() + 1);
         size_t cursor = 0;
         for (size_t i = 0; i < mInstructions.size(); i++) {
+            if (mInstructions[i].type != AssemblerNode::Insn) continue;
+
             offsets.push_back(cursor);
             cursor += GetInstructionSize(mInstructions[i].insn, resolvedBranches[i]);
         }
