@@ -9,17 +9,18 @@ namespace bibbleasm {
     }
 
     void Assembler::label(std::string name) {
-        if (mLabels.contains(name)) {
+        if (mLabelToIds.contains(name)) {
             std::exit(67);
         }
 
-        mLabels[name] = mInstructions.size();
         mPendingLabel = std::move(name);
     }
 
     void Assembler::emit(Instruction insn) {
         if (mPendingLabel.has_value()) {
-            mInstructions.emplace_back(std::move(mPendingLabel.value()), std::move(insn), mNextInstructionId++);
+            InstructionId id = mNextInstructionId++;
+            mLabelToIds[*mPendingLabel] = id;
+            mInstructions.emplace_back(std::move(mPendingLabel.value()), std::move(insn), id);
             mPendingLabel.reset();
         } else {
             mInstructions.emplace_back(std::move(insn), mNextInstructionId++);
@@ -53,6 +54,10 @@ namespace bibbleasm {
 
     std::vector<uint8_t> Assembler::assemble() {
         if (mInstructions.empty()) return {};
+
+        for (size_t i = 0; i < mInstructions.size(); i++) {
+            mIdToPositions[mInstructions[i].id] = i;
+        }
 
         std::vector<int64_t> branches(mInstructions.size(), 0);
 
@@ -133,12 +138,12 @@ namespace bibbleasm {
             bool found = false;
             for (const auto& op : insn.operands()) {
                 if (const auto* label = std::get_if<Label>(&op)) {
-                    auto it = mLabels.find(label->name);
-                    if (it == mLabels.end()) {
+                    auto it = mLabelToIds.find(label->name);
+                    if (it == mLabelToIds.end()) {
                         std::exit(67);
                     }
 
-                    size_t targetIndex = it->second;
+                    size_t targetIndex = mIdToPositions.at(it->second);
                     size_t nextOffset = (i + 1 < offsets.size()) ? offsets[i + 1] : offsets.back();
                     size_t targetOffset = offsets[targetIndex];
 

@@ -53,13 +53,15 @@ namespace bibbleasm {
 
         void reset() {
             mInstructions.clear();
-            mLabels.clear();
+            mLabelToIds.clear();
+            mIdToPositions.clear();
             mPendingLabel.reset();
         }
 
     private:
         std::vector<LabeledInstruction> mInstructions;
-        std::unordered_map<std::string, size_t> mLabels;
+        std::unordered_map<std::string, InstructionId> mLabelToIds; // name to id
+        std::unordered_map<InstructionId, size_t> mIdToPositions;
         std::optional<std::string> mPendingLabel;
 
         InstructionId mNextInstructionId = 0;
