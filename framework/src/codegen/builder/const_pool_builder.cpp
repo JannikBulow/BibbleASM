@@ -2,9 +2,39 @@
 
 #include "BibbleASM/codegen/builder/const_pool_builder.h"
 
+#include <format>
+
 namespace bibbleasm {
     ConstPoolBuilder::ConstPoolBuilder() {
         mEntries.push_back({});
+    }
+
+    std::string ConstPoolBuilder::stringifyEntry(ConstantIndex index) const {
+        const auto& entry = mEntries[index];
+        switch (entry.tag) {
+            case bibblebytecode::ConstPool::BYTE:
+                return std::format("byte {}", entry.u.b);
+            case bibblebytecode::ConstPool::SHORT:
+                return std::format("short {}", entry.u.s);
+            case bibblebytecode::ConstPool::INT:
+                return std::format("int {}", entry.u.i);
+            case bibblebytecode::ConstPool::LONG:
+                return std::format("long {}", entry.u.l);
+            case bibblebytecode::ConstPool::STRING:
+                return std::format("string {}", entry.u.str);
+            case bibblebytecode::ConstPool::MODULE_INFO:
+                return std::format("module_info #{}", entry.u.mi.name);
+            case bibblebytecode::ConstPool::CLASS_INFO:
+                return std::format("class_info #{}, #{}", entry.u.ci.module, entry.u.ci.name);
+            case bibblebytecode::ConstPool::FIELD_INFO:
+                return std::format("field_info #{}, #{}", entry.u.fi.clas, entry.u.fi.name);
+            case bibblebytecode::ConstPool::METHOD_INFO:
+                return std::format("method_info #{}, #{}", entry.u.mei.clas, entry.u.mei.name);
+            case bibblebytecode::ConstPool::FUNCTION_INFO:
+                return std::format("function_info #{}, #{}", entry.u.fni.module, entry.u.fni.name);
+        }
+
+        return "<unreachable>";
     }
 
     ConstantIndex ConstPoolBuilder::addByte(int8_t value) {

@@ -26,6 +26,7 @@ namespace bibbleasm {
         ConstPoolBuilder& operator=(ConstPoolBuilder&&) = default;
 
         uint16_t getEntryCount() const { return static_cast<uint16_t>(mEntries.size()); }
+        std::string stringifyEntry(ConstantIndex index) const;
 
         ConstantIndex addByte(int8_t value);
         ConstantIndex addShort(int16_t value);
