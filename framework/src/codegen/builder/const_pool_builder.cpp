@@ -9,7 +9,7 @@ namespace bibbleasm {
         mEntries.push_back({});
     }
 
-    std::string ConstPoolBuilder::stringifyEntry(ConstantIndex index) const {
+    std::string ConstPoolBuilder::stringifyEntry(ConstantIndex index) const { // TODO: remake this so it doesn't print 44 comments on a field info
         const auto& entry = mEntries[index];
         switch (entry.tag) {
             case bibblebytecode::ConstPool::BYTE:
