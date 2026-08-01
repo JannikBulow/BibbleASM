@@ -21,17 +21,17 @@ namespace bibbleasm {
             case bibblebytecode::ConstPool::LONG:
                 return std::format("long {}", entry.u.l);
             case bibblebytecode::ConstPool::STRING:
-                return std::format("string {}", entry.u.str);
+                return std::format("string \"{}\"", entry.u.str);
             case bibblebytecode::ConstPool::MODULE_INFO:
-                return std::format("module_info #{}", entry.u.mi.name);
+                return std::format("module_info #{} ; #{} = {}", entry.u.mi.name, entry.u.mi.name, stringifyEntry(entry.u.mi.name));
             case bibblebytecode::ConstPool::CLASS_INFO:
-                return std::format("class_info #{}, #{}", entry.u.ci.module, entry.u.ci.name);
+                return std::format("class_info #{}, #{} ; #{} = {}, #{} = {}", entry.u.ci.module, entry.u.ci.name, entry.u.ci.module, stringifyEntry(entry.u.ci.module), entry.u.ci.name, stringifyEntry(entry.u.ci.name));
             case bibblebytecode::ConstPool::FIELD_INFO:
-                return std::format("field_info #{}, #{}", entry.u.fi.clas, entry.u.fi.name);
+                return std::format("field_info #{}, #{} ; #{} = {}, #{} = {}", entry.u.fi.clas, entry.u.fi.name, entry.u.fi.clas, stringifyEntry(entry.u.fi.clas), entry.u.fi.name, stringifyEntry(entry.u.fi.name));
             case bibblebytecode::ConstPool::METHOD_INFO:
-                return std::format("method_info #{}, #{}", entry.u.mei.clas, entry.u.mei.name);
+                return std::format("method_info #{}, #{} ; #{} = {}, #{} = {}", entry.u.mei.clas, entry.u.mei.name, entry.u.mei.clas, stringifyEntry(entry.u.mei.clas), entry.u.mei.name, stringifyEntry(entry.u.mei.name));
             case bibblebytecode::ConstPool::FUNCTION_INFO:
-                return std::format("function_info #{}, #{}", entry.u.fni.module, entry.u.fni.name);
+                return std::format("function_info #{}, #{} ; #{} = {}, #{} = {}", entry.u.fni.module, entry.u.fni.name, entry.u.fni.module, stringifyEntry(entry.u.fni.module), entry.u.fni.name, stringifyEntry(entry.u.fni.name));
         }
 
         return "<unreachable>";
