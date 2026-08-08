@@ -156,6 +156,7 @@ namespace bibbleasm {
             emit(std::move(insn));
         }
 
+        std::vector<AssemblerNode>& instructions() { return mInstructions; }
         const std::vector<AssemblerNode>& instructions() const { return mInstructions; }
 
         std::vector<uint8_t> assemble();
