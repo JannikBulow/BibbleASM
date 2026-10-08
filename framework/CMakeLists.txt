@@ -86,5 +86,24 @@ target_compile_features(BibbleASM-framework-static PUBLIC cxx_std_20)
 target_link_libraries(BibbleASM-framework-shared BibbleBytecode-shared BibbleOpcodes)
 target_link_libraries(BibbleASM-framework-static BibbleBytecode-static BibbleOpcodes)
 
-set_target_properties(BibbleASM-framework-shared PROPERTIES OUTPUT_NAME "basm")
-set_target_properties(BibbleASM-framework-static PROPERTIES OUTPUT_NAME "basm-aio")
+set_target_properties(BibbleASM-framework-shared PROPERTIES
+    OUTPUT_NAME "basm"
+    VERSION 1.0.0
+    SOVERSION 1
+)
+set_target_properties(BibbleASM-framework-static PROPERTIES
+    OUTPUT_NAME "basm-aio"
+    VERSION 1.0.0
+)
+
+install(
+    TARGETS BibbleASM-framework-shared BibbleASM-framework-static
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+install(
+    DIRECTORY include/
+    DESTINATION include
+)
