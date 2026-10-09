@@ -87,17 +87,20 @@ target_link_libraries(BibbleASM-framework-shared BibbleBytecode-shared BibbleOpc
 target_link_libraries(BibbleASM-framework-static BibbleBytecode-static BibbleOpcodes)
 
 set_target_properties(BibbleASM-framework-shared PROPERTIES
+    EXPORT_NAME ASM
     OUTPUT_NAME "basm"
     VERSION 1.0.0
     SOVERSION 1
 )
 set_target_properties(BibbleASM-framework-static PROPERTIES
+    EXPORT_NAME ASMStatic
     OUTPUT_NAME "basm-aio"
     VERSION 1.0.0
 )
 
 install(
     TARGETS BibbleASM-framework-shared BibbleASM-framework-static
+    EXPORT BibbleASMTargets
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -106,4 +109,11 @@ install(
 install(
     DIRECTORY include/
     DESTINATION include
+)
+
+install(
+    EXPORT BibbleASMTargets
+    FILE BibbleASMTargets.cmake
+    NAMESPACE Bibble::
+    DESTINATION lib/cmake/BibbleASM
 )
