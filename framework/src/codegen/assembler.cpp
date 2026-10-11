@@ -114,7 +114,7 @@ namespace bibbleasm {
             }
         }
 
-        out.pop_back(); // remove newline
+        if (!out.empty()) out.pop_back(); // remove newline
 
         return out;
     }
